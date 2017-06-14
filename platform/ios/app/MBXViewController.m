@@ -112,7 +112,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
 
 @property (nonatomic) IBOutlet MGLMapView *mapView;
-@property (weak, nonatomic) IBOutlet UILabel *hudLabel;
+@property (weak, nonatomic) IBOutlet UIButton *hudLabel;
 @property (nonatomic) NSInteger styleIndex;
 @property (nonatomic) BOOL debugLoggingEnabled;
 @property (nonatomic) BOOL customUserLocationAnnnotationEnabled;
@@ -161,6 +161,7 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
     self.debugLoggingEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"MGLMapboxMetricsDebugLoggingEnabled"];
     self.mapView.scaleBar.hidden = NO;
     self.hudLabel.hidden = YES;
+    self.hudLabel.titleLabel.font = [UIFont monospacedDigitSystemFontOfSize:10 weight:UIFontWeightRegular];
 
     if ([MGLAccountManager accessToken].length)
     {
@@ -1797,16 +1798,26 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
         {
             queuedAnnotations += queue.count;
         }
-        self.hudLabel.text = [NSString stringWithFormat:@" Visible: %ld  Queued: %ld", (unsigned long)mapView.visibleAnnotations.count, (unsigned long)queuedAnnotations];
+        self.hudLabel.titleLabel.text = [NSString stringWithFormat:@" Visible: %ld  Queued: %ld", (unsigned long)mapView.visibleAnnotations.count, (unsigned long)queuedAnnotations];
     } else if (self.showZoomLevelEnabled) {
-        self.hudLabel.text = [NSString stringWithFormat:@" Zoom: %.2f", self.mapView.zoomLevel];
+        [self.hudLabel setTitle:[self zoomStringForHUD] forState:UIControlStateNormal];
     }
 }
 
 - (void)mapView:(MGLMapView *)mapView regionDidChangeAnimated:(BOOL)animated {
     if (self.showZoomLevelEnabled) {
-        self.hudLabel.text = [NSString stringWithFormat:@" Zoom: %.2f", self.mapView.zoomLevel];
+        [self.hudLabel setTitle:[self zoomStringForHUD] forState:UIControlStateNormal];
     }
+}
+
+- (void)mapView:(MGLMapView *)mapView didUpdateUserLocation:(MGLUserLocation *)userLocation {
+    if (self.showZoomLevelEnabled) {
+        [self.hudLabel setTitle:[self zoomStringForHUD] forState:UIControlStateNormal];
+    }
+}
+
+- (NSString *)zoomStringForHUD {
+    return [NSString stringWithFormat:@"z%.2fPitch: %.2f, Heading: %.0f (±%.1f) %@", self.mapView.zoomLevel, self.mapView.camera.pitch, self.mapView.userLocation.heading.trueHeading, self.mapView.userLocation.heading.headingAccuracy, self.mapView.userLocation.heading.timestamp];
 }
 
 @end
