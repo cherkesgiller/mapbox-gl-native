@@ -231,10 +231,9 @@
             _headingIndicatorLayer = [[MGLUserLocationHeadingBeamLayer alloc] initWithUserLocationAnnotationView:self];
             //_headingIndicatorLayer = [[MGLUserLocationHeadingArrowLayer alloc] initWithUserLocationAnnotationView:self];
             [self.layer insertSublayer:_headingIndicatorLayer below:_dotBorderLayer];
-
-            _oldHeadingAccuracy = headingAccuracy;
         }
-        else if (_oldHeadingAccuracy != headingAccuracy)
+
+        if (_oldHeadingAccuracy != headingAccuracy)
         {
             //[_headingIndicatorLayer updateHeadingAccuracy:headingAccuracy];
              _oldHeadingAccuracy = headingAccuracy;
@@ -242,7 +241,15 @@
 
         if (self.userLocation.heading.trueHeading >= 0)
         {
-            _headingIndicatorLayer.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, -MGLRadiansFromDegrees(self.mapView.direction - self.userLocation.heading.trueHeading));
+            CGFloat rotation = -MGLRadiansFromDegrees(self.mapView.direction - self.userLocation.heading.trueHeading);
+            //NSLog(@"direction: %f, trueHeading: %f = %f", self.mapView.direction, self.userLocation.heading.trueHeading, rotation);
+            // Don't rotate if the change is imperceptible (arbitrarily chosen as: 0.01 radians/~0.6°).
+            if (fabs(rotation) > 0.01)
+            {
+                _headingIndicatorLayer.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, rotation);
+                //NSLog(@"Updating to %f (%f)", rotation, self.userLocation.heading.trueHeading);
+            }
+            //else { NSLog(@"cancelled rotation to %f because fabs(%f) (%f)", rotation, fabs(rotation), self.userLocation.heading.trueHeading); }
         }
     }
     else
