@@ -4430,6 +4430,8 @@ public:
     CLLocation *newLocation = locations.lastObject;
     _distanceFromOldUserLocation = [newLocation distanceFromLocation:oldLocation];
 
+    NSLog(@"New location? %@", newLocation);
+
     if ( ! _showsUserLocation || ! newLocation || ! CLLocationCoordinate2DIsValid(newLocation.coordinate)) return;
 
     if (! oldLocation || ! CLLocationCoordinate2DIsValid(oldLocation.coordinate) || [newLocation distanceFromLocation:oldLocation]
@@ -4662,15 +4664,18 @@ public:
 
 - (void)locationManager:(__unused CLLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading
 {
+    //NSLog(@"didUpdateHeading: %@", newHeading);
+
     if ( ! _showsUserLocation || self.pan.state == UIGestureRecognizerStateBegan || newHeading.headingAccuracy < 0) return;
 
     self.userLocation.heading = newHeading;
 
+    MGLUserLocationAnnotationView *yep = self.userLocationAnnotationView;
+    [yep update];
+
     if ([self.delegate respondsToSelector:@selector(mapView:didUpdateUserLocation:)])
     {
         [self.delegate mapView:self didUpdateUserLocation:self.userLocation];
-
-        if ( ! _showsUserLocation) return;
     }
 
     CLLocationDirection headingDirection = (newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading);

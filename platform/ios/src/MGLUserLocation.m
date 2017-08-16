@@ -96,6 +96,8 @@ NS_ASSUME_NONNULL_END
         [self willChangeValueForKey:@"heading"];
         _heading = newHeading;
         [self didChangeValueForKey:@"heading"];
+
+        //NSLog(@"setHeading succeeded");
     }
 }
 
