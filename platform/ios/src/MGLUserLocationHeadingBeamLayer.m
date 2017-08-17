@@ -24,9 +24,6 @@
     self.rasterizationScale = UIScreen.mainScreen.scale;
     self.drawsAsynchronously = YES;
 
-    self.borderColor = [UIColor colorWithWhite:0 alpha:0.25].CGColor;
-    self.borderWidth = 1;
-
     _maskLayer = [CAShapeLayer layer];
     _maskLayer.frame = self.bounds;
     _maskLayer.path = [self clippingMaskForAccuracy:0];
