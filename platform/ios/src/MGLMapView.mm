@@ -4191,14 +4191,14 @@ public:
             }
         }
 
-        self.locationManager.headingFilter = 5.0;
+        //self.locationManager.headingFilter = 5.0;
         self.locationManager.delegate = self;
         [self.locationManager startUpdatingLocation];
 
-//        if (self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
-//        {
+        if (self.showsUserHeadingIndicator || self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
+        {
             [self.locationManager startUpdatingHeading];
-//        }
+        }
     }
     else if ( ! shouldEnableLocationServices && self.locationManager)
     {
@@ -4670,8 +4670,10 @@ public:
 
     self.userLocation.heading = newHeading;
 
-    MGLUserLocationAnnotationView *yep = self.userLocationAnnotationView;
-    [yep update];
+    if (self.showsUserHeadingIndicator || self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
+    {
+        [self updateUserLocationAnnotationView];
+    }
 
     if ([self.delegate respondsToSelector:@selector(mapView:didUpdateUserLocation:)])
     {

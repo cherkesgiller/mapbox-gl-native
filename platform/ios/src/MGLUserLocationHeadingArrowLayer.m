@@ -29,7 +29,6 @@ const CGFloat MGLUserLocationHeadingArrowSize = MGLUserLocationAnnotationDotSize
 
 - (void)updateTintColor:(CGColorRef)color
 {
-    // redraw the raw tinted gradient
     self.fillColor = color;
 }
 

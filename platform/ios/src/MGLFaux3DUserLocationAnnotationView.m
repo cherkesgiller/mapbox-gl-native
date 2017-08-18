@@ -215,7 +215,7 @@
         [self updateFrameWithSize:MGLUserLocationAnnotationDotSize];
     }
 
-    BOOL showHeadingIndicator = YES;//self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
+    BOOL showHeadingIndicator = self.mapView.showsUserHeadingIndicator || self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
 
     // update heading indicator
     //
@@ -246,8 +246,26 @@
             // Don't rotate if the change is imperceptible (arbitrarily chosen as: 0.01 radians/~0.6°).
             if (fabs(rotation) > 0.01)
             {
+                // disable implicit animation of the heading indicator if the change is not significant (<~5°)
+                //id shouldDisableActions = (fabs(rotation) < 0.0875) ? (id)kCFBooleanTrue : (id)kCFBooleanFalse;
+                //NSLog(@"rotation: %.5f", fabs(rotation));
+
+                [CATransaction begin];
+                [CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions];
+
+//                CGFloat currentAngle = [[_headingIndicatorLayer valueForKeyPath:@"transform.rotation.z"] floatValue];
+//                [_headingIndicatorLayer setValue:@(currentAngle + rotation) forKeyPath:@"transform.rotation.z"];
+//
+//                CABasicAnimation *animation = [CABasicAnimation animationWithKeyPath:@"transform.rotation.z"];
+//                animation.byValue = @(rotation);
+//                //animation.toValue = @(0);
+//
+//                [_headingIndicatorLayer addAnimation:animation forKey:@"headingRotation"];
+
                 _headingIndicatorLayer.affineTransform = CGAffineTransformRotate(CGAffineTransformIdentity, rotation);
                 //NSLog(@"Updating to %f (%f)", rotation, self.userLocation.heading.trueHeading);
+
+                [CATransaction commit];
             }
             //else { NSLog(@"cancelled rotation to %f because fabs(%f) (%f)", rotation, fabs(rotation), self.userLocation.heading.trueHeading); }
         }
