@@ -872,8 +872,12 @@ public:
 
     if (self.compassView.alpha)
     {
-        [self updateHeadingForDeviceOrientation];
         [self updateCompass];
+    }
+
+    if (self.compassView.alpha || self.showsUserHeadingIndicator)
+    {
+        [self updateHeadingForDeviceOrientation];
     }
 
     [self updateUserLocationAnnotationView];
@@ -4195,10 +4199,7 @@ public:
         self.locationManager.delegate = self;
         [self.locationManager startUpdatingLocation];
 
-        if (self.showsUserHeadingIndicator || self.userTrackingMode == MGLUserTrackingModeFollowWithHeading)
-        {
-            [self.locationManager startUpdatingHeading];
-        }
+        [self validateUserHeadingUpdating];
     }
     else if ( ! shouldEnableLocationServices && self.locationManager)
     {
@@ -4322,8 +4323,6 @@ public:
         {
             self.userTrackingState = MGLUserTrackingStatePossible;
 
-            //[self.locationManager stopUpdatingHeading];
-
             // Immediately update the annotation view; other cases update inside
             // the locationManager:didUpdateLocations: method.
             [self updateUserLocationAnnotationView];
@@ -4335,8 +4334,6 @@ public:
         {
             self.userTrackingState = animated ? MGLUserTrackingStatePossible : MGLUserTrackingStateChanged;
             self.showsUserLocation = YES;
-
-            //[self.locationManager stopUpdatingHeading];
 
             CLLocation *location = self.userLocation.location;
             if (location && self.userLocationAnnotationView)
@@ -4365,13 +4362,11 @@ public:
                 [self locationManager:self.locationManager didUpdateLocations:@[self.userLocation.location] animated:animated];
             }
 
-            [self updateHeadingForDeviceOrientation];
-
-            [self.locationManager startUpdatingHeading];
-
             break;
         }
     }
+
+    [self validateUserHeadingUpdating];
 
     if ([self.delegate respondsToSelector:@selector(mapView:didChangeUserTrackingMode:animated:)])
     {
@@ -4419,6 +4414,27 @@ public:
     }
 }
 
+- (void)setShowsUserHeadingIndicator:(BOOL)showsUserHeadingIndicator
+{
+    _showsUserHeadingIndicator = showsUserHeadingIndicator;
+    [self validateUserHeadingUpdating];
+}
+
+- (void)validateUserHeadingUpdating
+{
+    BOOL canShowPermanentHeadingIndicator = self.showsUserHeadingIndicator && self.userTrackingMode != MGLUserTrackingModeFollowWithCourse;
+
+    if (self.showsUserLocation && (canShowPermanentHeadingIndicator || self.userTrackingMode == MGLUserTrackingModeFollowWithHeading))
+    {
+        [self updateHeadingForDeviceOrientation];
+        [self.locationManager startUpdatingHeading];
+    }
+    else
+    {
+        [self.locationManager stopUpdatingHeading];
+    }
+}
+
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
 {
     [self locationManager:manager didUpdateLocations:locations animated:YES];
@@ -4429,8 +4445,6 @@ public:
     CLLocation *oldLocation = self.userLocation.location;
     CLLocation *newLocation = locations.lastObject;
     _distanceFromOldUserLocation = [newLocation distanceFromLocation:oldLocation];
-
-    NSLog(@"New location? %@", newLocation);
 
     if ( ! _showsUserLocation || ! newLocation || ! CLLocationCoordinate2DIsValid(newLocation.coordinate)) return;
 
