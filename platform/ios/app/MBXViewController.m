@@ -110,7 +110,6 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
                                  UITableViewDataSource,
                                  MGLMapViewDelegate>
 
-
 @property (nonatomic) IBOutlet MGLMapView *mapView;
 @property (weak, nonatomic) IBOutlet UIButton *hudLabel;
 @property (nonatomic) NSInteger styleIndex;
@@ -160,8 +159,11 @@ typedef NS_ENUM(NSInteger, MBXSettingsMiscellaneousRows) {
 
     self.debugLoggingEnabled = [[NSUserDefaults standardUserDefaults] boolForKey:@"MGLMapboxMetricsDebugLoggingEnabled"];
     self.mapView.scaleBar.hidden = NO;
+
     self.mapView.showsUserHeadingIndicator = YES;
-    self.hudLabel.hidden = YES;
+    self.showZoomLevelEnabled = YES;
+
+    self.hudLabel.hidden = NO;
     self.hudLabel.titleLabel.font = [UIFont monospacedDigitSystemFontOfSize:10 weight:UIFontWeightRegular];
 
     if ([MGLAccountManager accessToken].length)
