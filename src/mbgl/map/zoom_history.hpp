@@ -26,10 +26,12 @@ struct ZoomHistory {
             return true;
         }
 
+        bool integerZoomChanged = lastIntegerZoom != floorZ;
+
         if (lastFloorZoom > floorZ) {
             lastIntegerZoom = floorZ + 1;
             lastIntegerZoomTime = now == Clock::time_point::max() ? zero : now;
-        } else if (lastFloorZoom < floorZ || lastIntegerZoom != floorZ) {
+        } else if (lastFloorZoom < floorZ || integerZoomChanged) {
             lastIntegerZoom = floorZ;
             lastIntegerZoomTime = now == Clock::time_point::max() ? zero : now;
         }
@@ -40,7 +42,7 @@ struct ZoomHistory {
             return true;
         }
 
-        return false;
+        return integerZoomChanged;
     }
 };
 
