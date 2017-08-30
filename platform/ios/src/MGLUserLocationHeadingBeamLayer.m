@@ -11,11 +11,10 @@
 - (instancetype)initWithUserLocationAnnotationView:(MGLUserLocationAnnotationView *)userLocationView
 {
     CGFloat size = MGLUserLocationAnnotationHaloSize;
-    CGFloat position = MGLUserLocationAnnotationDotSize / 2.0;
 
     self = [super init];
     self.bounds = CGRectMake(0, 0, size, size);
-    self.position = CGPointMake(position, position);
+    self.position = CGPointMake(CGRectGetMidX(userLocationView.bounds), CGRectGetMidY(userLocationView.bounds));
     self.contents = (__bridge id)[self gradientImageWithTintColor:userLocationView.tintColor.CGColor];
     self.contentsGravity = kCAGravityBottom;
     self.contentsScale = UIScreen.mainScreen.scale;
@@ -59,8 +58,7 @@
     CGFloat gradientLocations[] = {0.0, 1.0};
     CGGradientRef gradient = CGGradientCreateWithColors(
         colorSpace,
-        (__bridge CFArrayRef)@[
-                               (__bridge id)tintColor,
+        (__bridge CFArrayRef)@[(__bridge id)tintColor,
                                (id)CFBridgingRelease(CGColorCreateCopyWithAlpha(tintColor, 0))],
         gradientLocations);
 
