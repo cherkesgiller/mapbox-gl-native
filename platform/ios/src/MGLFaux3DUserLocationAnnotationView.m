@@ -2,8 +2,9 @@
 
 #import "MGLMapView.h"
 #import "MGLUserLocation.h"
-#import "MGLUserLocationHeadingBeamLayer.h"
+#import "MGLUserLocationHeadingIndicator.h"
 #import "MGLUserLocationHeadingArrowLayer.h"
+#import "MGLUserLocationHeadingBeamLayer.h"
 
 @implementation MGLFaux3DUserLocationAnnotationView
 {
@@ -12,14 +13,13 @@
     CALayer *_puckDot;
     CAShapeLayer *_puckArrow;
 
-    MGLUserLocationHeadingBeamLayer *_headingIndicatorLayer;
-    //MGLUserLocationHeadingArrowLayer *_headingIndicatorLayer;
+    CALayer<MGLUserLocationHeadingIndicator> *_headingIndicatorLayer;
     CALayer *_accuracyRingLayer;
     CALayer *_dotBorderLayer;
     CALayer *_dotLayer;
     CALayer *_haloLayer;
 
-    double _oldHeadingAccuracy;
+    CLLocationDirection _oldHeadingAccuracy;
     CLLocationAccuracy _oldHorizontalAccuracy;
     double _oldZoom;
     double _oldPitch;
@@ -215,7 +215,8 @@
         [self updateFrameWithSize:MGLUserLocationAnnotationDotSize];
     }
 
-    BOOL showHeadingIndicator = self.mapView.showsUserHeadingIndicator || self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
+    BOOL headingTrackingModeEnabled = self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
+    BOOL showHeadingIndicator = self.mapView.showsUserHeadingIndicator || headingTrackingModeEnabled;
 
     // update heading indicator
     //
@@ -224,18 +225,27 @@
         _headingIndicatorLayer.hidden = NO;
         CLLocationDirection headingAccuracy = self.userLocation.heading.headingAccuracy;
 
+        if (([_headingIndicatorLayer isMemberOfClass:[MGLUserLocationHeadingBeamLayer class]] && ! headingTrackingModeEnabled) ||
+            ([_headingIndicatorLayer isMemberOfClass:[MGLUserLocationHeadingArrowLayer class]] && headingTrackingModeEnabled))
+        {
+            [_headingIndicatorLayer removeFromSuperlayer];
+            _headingIndicatorLayer = nil;
+            _oldHeadingAccuracy = -1;
+        }
+
         // heading indicator (tinted, semi-circle)
         //
         if ( ! _headingIndicatorLayer && headingAccuracy)
         {
-            _headingIndicatorLayer = [[MGLUserLocationHeadingBeamLayer alloc] initWithUserLocationAnnotationView:self];
-            //_headingIndicatorLayer = [[MGLUserLocationHeadingArrowLayer alloc] initWithUserLocationAnnotationView:self];
+            _headingIndicatorLayer = headingTrackingModeEnabled ?
+                [[MGLUserLocationHeadingBeamLayer alloc] initWithUserLocationAnnotationView:self] :
+                [[MGLUserLocationHeadingArrowLayer alloc] initWithUserLocationAnnotationView:self];
             [self.layer insertSublayer:_headingIndicatorLayer below:_dotBorderLayer];
         }
 
         if (_oldHeadingAccuracy != headingAccuracy)
         {
-            //[_headingIndicatorLayer updateHeadingAccuracy:headingAccuracy];
+            [_headingIndicatorLayer updateHeadingAccuracy:headingAccuracy];
              _oldHeadingAccuracy = headingAccuracy;
         }
 

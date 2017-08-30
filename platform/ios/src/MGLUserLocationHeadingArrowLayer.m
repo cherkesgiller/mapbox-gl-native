@@ -27,6 +27,11 @@ const CGFloat MGLUserLocationHeadingArrowSize = MGLUserLocationAnnotationDotSize
     return self;
 }
 
+- (void)updateHeadingAccuracy:(CLLocationDirection)accuracy
+{
+    // unimplemented
+}
+
 - (void)updateTintColor:(CGColorRef)color
 {
     self.fillColor = color;
