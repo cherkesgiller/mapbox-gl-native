@@ -9,7 +9,7 @@ const CGFloat MGLUserLocationHeadingArrowSize = MGLUserLocationAnnotationDotSize
 
 - (instancetype)initWithUserLocationAnnotationView:(MGLUserLocationAnnotationView *)userLocationView
 {
-    CGFloat size = MGLUserLocationAnnotationDotSize + roundf(MGLUserLocationHeadingArrowSize * 2);
+    CGFloat size = MGLUserLocationAnnotationDotSize + roundf(MGLUserLocationHeadingArrowSize);
 
     self = [super init];
     self.bounds = CGRectMake(0, 0, size, size);
@@ -22,6 +22,9 @@ const CGFloat MGLUserLocationHeadingArrowSize = MGLUserLocationAnnotationDotSize
 
 //    self.borderColor = [UIColor colorWithWhite:0 alpha:0.25].CGColor;
 //    self.borderWidth = 1;
+
+    self.strokeColor = UIColor.whiteColor.CGColor;
+    self.lineWidth = 1.0;
 
     return self;
 }
@@ -37,7 +40,7 @@ const CGFloat MGLUserLocationHeadingArrowSize = MGLUserLocationAnnotationDotSize
 }
 
 - (CGPathRef)arrowPath {
-    CGFloat center = self.bounds.size.width * 0.5;
+    CGFloat center = CGRectGetMidX(self.bounds);
     CGFloat size = roundf(MGLUserLocationHeadingArrowSize);
 
     CGPoint top =       CGPointMake(center,         0);

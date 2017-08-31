@@ -215,11 +215,11 @@
         [self updateFrameWithSize:MGLUserLocationAnnotationDotSize];
     }
 
+    // heading indicator (tinted, beam or arrow)
+    //
     BOOL headingTrackingModeEnabled = self.mapView.userTrackingMode == MGLUserTrackingModeFollowWithHeading;
     BOOL showHeadingIndicator = self.mapView.showsUserHeadingIndicator || headingTrackingModeEnabled;
 
-    // update heading indicator
-    //
     if (showHeadingIndicator)
     {
         _headingIndicatorLayer.hidden = NO;
@@ -233,20 +233,25 @@
             _oldHeadingAccuracy = -1;
         }
 
-        // heading indicator (tinted, semi-circle)
-        //
         if ( ! _headingIndicatorLayer && headingAccuracy)
         {
-            _headingIndicatorLayer = headingTrackingModeEnabled ?
-                [[MGLUserLocationHeadingBeamLayer alloc] initWithUserLocationAnnotationView:self] :
-                [[MGLUserLocationHeadingArrowLayer alloc] initWithUserLocationAnnotationView:self];
-            [self.layer insertSublayer:_headingIndicatorLayer below:_dotBorderLayer];
+            if (headingTrackingModeEnabled)
+            {
+                _headingIndicatorLayer = [[MGLUserLocationHeadingBeamLayer alloc] initWithUserLocationAnnotationView:self];
+                [self.layer insertSublayer:_headingIndicatorLayer below:_dotBorderLayer];
+            }
+            else
+            {
+                _headingIndicatorLayer = [[MGLUserLocationHeadingArrowLayer alloc] initWithUserLocationAnnotationView:self];
+                [self.layer addSublayer:_headingIndicatorLayer];
+                _headingIndicatorLayer.zPosition = 1;
+            }
         }
 
         if (_oldHeadingAccuracy != headingAccuracy)
         {
             [_headingIndicatorLayer updateHeadingAccuracy:headingAccuracy];
-             _oldHeadingAccuracy = headingAccuracy;
+            _oldHeadingAccuracy = headingAccuracy;
         }
 
         if (self.userLocation.heading.trueHeading >= 0)
@@ -285,7 +290,6 @@
         [_headingIndicatorLayer removeFromSuperlayer];
         _headingIndicatorLayer = nil;
     }
-
 
     // update accuracy ring (if zoom or horizontal accuracy have changed)
     //
