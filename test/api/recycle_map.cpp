@@ -5,10 +5,12 @@
 #include <mbgl/map/map.hpp>
 #include <mbgl/renderer/backend_scope.hpp>
 #include <mbgl/storage/online_file_source.hpp>
+#include <mbgl/style/layers/line_layer.hpp>
 #include <mbgl/style/layers/symbol_layer.hpp>
 #include <mbgl/style/sources/geojson_source.hpp>
 #include <mbgl/style/image.hpp>
 #include <mbgl/style/style.hpp>
+#include <mbgl/style/observer.hpp>
 #include <mbgl/util/default_thread_pool.hpp>
 #include <mbgl/util/exception.hpp>
 #include <mbgl/util/geometry.hpp>
@@ -55,4 +57,47 @@ TEST(API, RecycleMapUpdateImages) {
 
     loadStyle("flipped_marker", "test/fixtures/sprites/flipped_marker.png");
     test::checkImage("test/fixtures/recycle_map/flipped_marker", frontend.render(*map), 0.0006, 0.1);
+}
+
+TEST(API, RecycleMapRefreshRenderTileLayers) {
+    util::RunLoop loop;
+
+    StubFileSource fileSource;
+    ThreadPool threadPool(4);
+    float pixelRatio { 1 };
+
+    HeadlessFrontend frontend { pixelRatio, fileSource, threadPool };
+    auto map = std::make_unique<Map>(frontend, MapObserver::nullObserver(), frontend.getSize(),
+                                     pixelRatio, fileSource, threadPool, MapMode::Still);
+
+    EXPECT_TRUE(map);
+
+    map->setLatLngZoom({ 0, 0 }, 10);
+
+    map->getStyle().loadJSON(util::read_file("test/fixtures/api/empty.json"));
+
+    auto source = std::make_unique<GeoJSONSource>("source");
+    source->setGeoJSON({ LineString<double> { { -45, -45 }, { 45, 45 } }});
+    map->getStyle().addSource(std::move(source));
+
+    auto symbol = std::make_unique<SymbolLayer>("symbol", "source");
+    map->getStyle().addLayer(std::move(symbol));
+
+    // Retain render tile at given position.
+    frontend.render(*map);
+
+    map->setLatLngZoom({ 45, 45 }, 12);
+
+    auto layer = std::make_unique<LineLayer>("line", "source");
+    layer->setLineColor({ mbgl::Color::red() });
+    map->getStyle().addLayer(std::move(layer));
+
+    // Now add a new layer and use non-cached/retained tiles.
+    frontend.render(*map);
+
+    map->setLatLngZoom({ 0, 0 }, 10);
+
+    // Removing a layer should enforce relayout in the previous cached/retained
+    // tile from the same position.
+    test::checkImage("test/fixtures/recycle_map/red_line", frontend.render(*map), 0.0006, 0.1);
 }

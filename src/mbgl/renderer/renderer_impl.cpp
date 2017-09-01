@@ -188,11 +188,20 @@ void Renderer::Impl::render(const UpdateParameters& updateParameters) {
 
     const bool hasImageDiff = !(imageDiff.added.empty() && imageDiff.removed.empty() && imageDiff.changed.empty());
 
+    auto hasRemovedLayerWithSourceID = [&](const auto& sourceID) {
+        return std::find_if(layerDiff.removed.cbegin(), layerDiff.removed.cend(), [&](const auto p) {
+                return p.second->source == sourceID;
+        }) != layerDiff.removed.cend();
+    };
+
     // Update all sources.
     for (const auto& source : *sourceImpls) {
         std::vector<Immutable<Layer::Impl>> filteredLayers;
         bool needsRendering = false;
-        bool needsRelayout = false;
+
+        // Check for removed layers associated with this source: this render
+        // source's cached/retained tiles now needs relayout.
+        bool needsRelayout = hasRemovedLayerWithSourceID(source->id);
 
         for (const auto& layer : *layerImpls) {
             if (layer->type == LayerType::Background ||

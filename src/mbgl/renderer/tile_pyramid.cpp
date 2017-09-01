@@ -66,6 +66,11 @@ void TilePyramid::update(const std::vector<Immutable<style::Layer::Impl>>& layer
     // If we need a relayout, abandon any cached tiles; they're now stale.
     if (needsRelayout) {
         cache.clear();
+
+        // Also update *all* retained tiles.
+        for (auto& pair : tiles) {
+            pair.second->setLayers(layers);
+        }
     }
 
     // If we're not going to render anything, move our existing tiles into
@@ -124,10 +129,6 @@ void TilePyramid::update(const std::vector<Immutable<style::Layer::Impl>>& layer
     auto retainTileFn = [&](Tile& tile, Resource::Necessity necessity) -> void {
         if (retain.emplace(tile.id).second) {
             tile.setNecessity(necessity);
-        }
-
-        if (needsRelayout) {
-            tile.setLayers(layers);
         }
     };
     auto getTileFn = [&](const OverscaledTileID& tileID) -> Tile* {
