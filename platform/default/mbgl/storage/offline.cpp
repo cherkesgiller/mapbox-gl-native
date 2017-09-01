@@ -1,6 +1,7 @@
 #include <mbgl/storage/offline.hpp>
 #include <mbgl/util/tile_cover.hpp>
 #include <mbgl/util/tileset.hpp>
+#include <mbgl/util/projection.hpp>
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -38,6 +39,24 @@ std::vector<CanonicalTileID> OfflineTilePyramidRegionDefinition::tileCover(Sourc
         for (const auto& tile : util::tileCover(bounds, z)) {
             result.emplace_back(tile.canonical);
         }
+    }
+
+    return result;
+}
+
+unsigned long OfflineTilePyramidRegionDefinition::tileCount(SourceType type, uint16_t tileSize, const Range<uint8_t>& zoomRange) const {
+    double minZ = std::max<double>(util::coveringZoomLevel(minZoom, type, tileSize), zoomRange.min);
+    double maxZ = std::min<double>(util::coveringZoomLevel(maxZoom, type, tileSize), zoomRange.max);
+
+    assert(minZ >= 0);
+    assert(maxZ >= 0);
+    assert(minZ < std::numeric_limits<uint8_t>::max());
+    assert(maxZ < std::numeric_limits<uint8_t>::max());
+
+    unsigned long result = 0;;
+    for (auto z = minZ; z <= maxZ; z++) {
+        auto count = util::tileCount(bounds, z, tileSize);
+        result += count;
     }
 
     return result;

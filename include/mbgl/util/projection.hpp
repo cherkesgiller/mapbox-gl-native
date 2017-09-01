@@ -89,6 +89,19 @@ public:
             wrapMode
         };
     }
+    
+    // Project lat, lon to point in a zoom-dependent world size
+    static Point<double> project(const LatLng& point, uint8_t zoom, uint16_t tileSize) {
+        const double t2z = tileSize * std::pow(2, zoom);
+        const double d = t2z / 2;
+        const double m = 1 - 1e-15;
+        auto f = util::clamp(std::sin(util::DEG2RAD * point.latitude()), -m, m);
+        auto x = std::round(d + point.longitude() * t2z / 360);
+        auto y = std::round(d + 0.5 * std::log((1 + f ) / (1 - f)) * (t2z / util::M2PI));
+        x = std::min(x, t2z);
+        y = std::min(y, t2z);
+        return { x, y };
+    }
 };
 
 } // namespace mbgl
